@@ -4,7 +4,7 @@ import model
 import misc
 import time
 import datetime
-import urllib2
+import urllib.parse
 import logging
 
 logging.basicConfig(
@@ -61,8 +61,7 @@ def GetCommunityByRegionlist(city, regionlist=[u'xicheng']):
             get_community_perregion(city, regionname)
             logging.info(regionname + "Done")
         except Exception as e:
-            logging.error(e)
-            logging.error(regionname + "Fail")
+            logging.exception(regionname + "Fail")
             pass
     endtime = datetime.datetime.now()
     logging.info("Run time: " + str(endtime - starttime))
@@ -97,7 +96,7 @@ def GetRentByRegionlist(city, regionlist=[u'xicheng']):
 def get_house_percommunity(city, communityname):
     baseUrl = u"http://%s.lianjia.com/" % (city)
     url = baseUrl + u"ershoufang/rs" + \
-        urllib2.quote(communityname.encode('utf8')) + "/"
+          urllib.parse.quote(communityname.encode('utf8')) + "/"
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
 
@@ -112,8 +111,8 @@ def get_house_percommunity(city, communityname):
     for page in range(total_pages):
         if page > 0:
             url_page = baseUrl + \
-                u"ershoufang/pg%drs%s/" % (page,
-                                           urllib2.quote(communityname.encode('utf8')))
+                       u"ershoufang/pg%drs%s/" % (page,
+                                                  urllib.parse.quote(communityname.encode('utf8')))
             source_code = misc.get_source_code(url_page)
             soup = BeautifulSoup(source_code, 'lxml')
 
@@ -163,22 +162,20 @@ def get_house_percommunity(city, communityname):
             data_source.append(info_dict)
             hisprice_data_source.append(
                 {"houseID": info_dict["houseID"], "totalPrice": info_dict["totalPrice"]})
-            # model.Houseinfo.insert(**info_dict).upsert().execute()
-            #model.Hisprice.insert(houseID=info_dict['houseID'], totalPrice=info_dict['totalPrice']).upsert().execute()
 
         with model.database.atomic():
             if data_source:
-                model.Houseinfo.insert_many(data_source).upsert().execute()
+                model.Houseinfo.replace_many(data_source).execute()
             if hisprice_data_source:
-                model.Hisprice.insert_many(
-                    hisprice_data_source).upsert().execute()
+                model.Hisprice.replace_many(
+                    hisprice_data_source).execute()
         time.sleep(1)
 
 
 def get_sell_percommunity(city, communityname):
     baseUrl = u"http://%s.lianjia.com/" % (city)
     url = baseUrl + u"chengjiao/rs" + \
-        urllib2.quote(communityname.encode('utf8')) + "/"
+          urllib.parse.quote(communityname.encode('utf8')) + "/"
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
 
@@ -193,8 +190,8 @@ def get_sell_percommunity(city, communityname):
     for page in range(total_pages):
         if page > 0:
             url_page = baseUrl + \
-                u"chengjiao/pg%drs%s/" % (page,
-                                          urllib2.quote(communityname.encode('utf8')))
+                       u"chengjiao/pg%drs%s/" % (page,
+                                                 urllib.parse.quote(communityname.encode('utf8')))
             source_code = misc.get_source_code(url_page)
             soup = BeautifulSoup(source_code, 'lxml')
 
@@ -258,15 +255,14 @@ def get_sell_percommunity(city, communityname):
                     continue
                 # Sellinfo insert into mysql
                 data_source.append(info_dict)
-                # model.Sellinfo.insert(**info_dict).upsert().execute()
 
         with model.database.atomic():
             if data_source:
-                model.Sellinfo.insert_many(data_source).upsert().execute()
+                model.Sellinfo.replace_many(data_source).execute()
         time.sleep(1)
 
 
-def get_community_perregion(city, regionname=u'xicheng'):
+def get_community_perregion(city, regionname=u''):
     baseUrl = u"http://%s.lianjia.com/" % (city)
     url = baseUrl + u"xiaoqu/" + regionname + "/"
     source_code = misc.get_source_code(url)
@@ -324,25 +320,25 @@ def get_community_perregion(city, regionname=u'xicheng'):
                 info_dict.update({u'price': price.span.get_text().strip('\n')})
 
                 communityinfo = get_communityinfo_by_url(link)
-                for key, value in communityinfo.iteritems():
+                for key, value in communityinfo.items():
                     info_dict.update({key: value})
 
                 info_dict.update({u'city': city})
-            except:
+            except Exception as e:
+                logging.exception(e)
                 continue
             # communityinfo insert into mysql
             data_source.append(info_dict)
-            # model.Community.insert(**info_dict).upsert().execute()
         with model.database.atomic():
             if data_source:
-                model.Community.insert_many(data_source).upsert().execute()
+                model.Community.replace_many(data_source).execute()
         time.sleep(1)
 
 
 def get_rent_percommunity(city, communityname):
     baseUrl = u"http://%s.lianjia.com/" % (city)
     url = baseUrl + u"zufang/rs" + \
-        urllib2.quote(communityname.encode('utf8')) + "/"
+          urllib.parse.quote(communityname.encode('utf8')) + "/"
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
 
@@ -357,8 +353,8 @@ def get_rent_percommunity(city, communityname):
     for page in range(total_pages):
         if page > 0:
             url_page = baseUrl + \
-                u"rent/pg%drs%s/" % (page,
-                                     urllib2.quote(communityname.encode('utf8')))
+                       u"rent/pg%drs%s/" % (page,
+                                            urllib.parse.quote(communityname.encode('utf8')))
             source_code = misc.get_source_code(url_page)
             soup = BeautifulSoup(source_code, 'lxml')
         i = 0
@@ -419,11 +415,10 @@ def get_rent_percommunity(city, communityname):
                     continue
                 # Rentinfo insert into mysql
                 data_source.append(info_dict)
-                # model.Rentinfo.insert(**info_dict).upsert().execute()
 
         with model.database.atomic():
             if data_source:
-                model.Rentinfo.insert_many(data_source).upsert().execute()
+                model.Rentinfo.replace_many(data_source).execute()
         time.sleep(1)
 
 
@@ -462,7 +457,7 @@ def get_house_perregion(city, district):
 
                     houseinfo = name.find("div", {"class": "houseInfo"})
                     info = houseinfo.get_text().split('|')
-                    #info_dict.update({u'community': info[0]})
+                    # info_dict.update({u'community': info[0]})
                     info_dict.update({u'housetype': info[0]})
                     info_dict.update({u'square': info[1]})
                     info_dict.update({u'direction': info[2]})
@@ -473,8 +468,8 @@ def get_house_perregion(city, district):
                     housefloor = name.find("div", {"class": "positionInfo"})
                     communityInfo = housefloor.get_text().split('-')
                     info_dict.update({u'community': communityInfo[0]})
-                    #info_dict.update({u'years': housefloor.get_text().strip()})
-                    #info_dict.update({u'floor': housefloor.get_text().strip()})
+                    # info_dict.update({u'years': housefloor.get_text().strip()})
+                    # info_dict.update({u'floor': housefloor.get_text().strip()})
 
                     followInfo = name.find("div", {"class": "followInfo"})
                     info_dict.update(
@@ -501,15 +496,13 @@ def get_house_perregion(city, district):
                 data_source.append(info_dict)
                 hisprice_data_source.append(
                     {"houseID": info_dict["houseID"], "totalPrice": info_dict["totalPrice"]})
-                # model.Houseinfo.insert(**info_dict).upsert().execute()
-                #model.Hisprice.insert(houseID=info_dict['houseID'], totalPrice=info_dict['totalPrice']).upsert().execute()
 
         with model.database.atomic():
             if data_source:
-                model.Houseinfo.insert_many(data_source).upsert().execute()
+                model.Houseinfo.replace_many(data_source).execute()
             if hisprice_data_source:
-                model.Hisprice.insert_many(
-                    hisprice_data_source).upsert().execute()
+                model.Hisprice.replace_many(
+                    hisprice_data_source).execute()
         time.sleep(1)
 
 
@@ -590,11 +583,10 @@ def get_rent_perregion(city, district):
                     continue
                 # Rentinfo insert into mysql
                 data_source.append(info_dict)
-                # model.Rentinfo.insert(**info_dict).upsert().execute()
 
         with model.database.atomic():
             if data_source:
-                model.Rentinfo.insert_many(data_source).upsert().execute()
+                model.Rentinfo.replace_many(data_source).execute()
         time.sleep(1)
 
 
@@ -607,25 +599,32 @@ def get_communityinfo_by_url(url):
 
     communityinfos = soup.findAll("div", {"class": "xiaoquInfoItem"})
     res = {}
+    key_type = {
+        u"建筑年代": u'year',
+        u"建筑类型": u'housetype',
+        u"物业费用": u'cost',
+        u"物业公司": u'service',
+        u"开发商": u'company',
+        u"楼栋总数": u'building_num',
+        u"房屋总数": u'house_num',
+    }
     for info in communityinfos:
-        key_type = {
-            u"建筑年代": u'year',
-            u"建筑类型": u'housetype',
-            u"物业费用": u'cost',
-            u"物业公司": u'service',
-            u"开发商": u'company',
-            u"楼栋总数": u'building_num',
-            u"房屋总数": u'house_num',
-        }
+
         try:
             key = info.find("span", {"xiaoquInfoLabel"})
             value = info.find("span", {"xiaoquInfoContent"})
-            key_info = key_type[key.get_text().strip()]
+            key_chinese = key.get_text().strip()
+            if key_chinese not in key_type.keys():
+                continue
+            key_info = key_type[key_chinese]
             value_info = value.get_text().strip()
             res.update({key_info: value_info})
-
         except:
+            logging.exception(info)
             continue
+    for chinese, english in key_type.items():
+        if english not in res.keys():
+            res[english] = None
     return res
 
 
