@@ -68,7 +68,7 @@ class Houseinfo(BaseModel):
     square = CharField()
     direction = CharField()
     floor = CharField()
-    taxtype = CharField()
+    tagtype = CharField()
     totalPrice = CharField()
     unitPrice = CharField()
     followInfo = CharField()

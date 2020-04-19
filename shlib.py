@@ -71,7 +71,7 @@ def get_house_percommunity(communityname):
                 info_dict.update({u'followInfo': ''})
 
                 tax = name.find("div", {"class": "property-tag-container"})
-                info_dict.update({u'taxtype': "".join(tax.get_text().split())})
+                info_dict.update({u'tagtype': "".join(tax.get_text().split())})
 
                 totalPrice = name.find(
                     "span", {"class": "total-price strong-num"})
@@ -366,7 +366,7 @@ def get_house_perregion(district):
                 info_dict.update({u'followInfo': ''})
 
                 tax = name.find("div", {"class": "property-tag-container"})
-                info_dict.update({u'taxtype': "".join(tax.get_text().split())})
+                info_dict.update({u'tagtype': "".join(tax.get_text().split())})
 
                 totalPrice = name.find(
                     "span", {"class": "total-price strong-num"})

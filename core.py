@@ -95,8 +95,7 @@ def GetRentByRegionlist(city, regionlist=[u'xicheng']):
 def get_house_percommunity(city, communityname):
     baseUrl = u"http://%s.lianjia.com/" % (city)
     normal_housing = "sf1"
-    url = baseUrl + u"ershoufang/"+normal_housing+"rs" + \
-          urllib.parse.quote(communityname.encode('utf8')) + "/"
+    url = baseUrl + u"ershoufang/%srs%s/" % (normal_housing, urllib.parse.quote(communityname.encode('utf8')))
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
 
@@ -111,8 +110,8 @@ def get_house_percommunity(city, communityname):
     for page in range(total_pages):
         if page > 0:
             url_page = baseUrl + \
-                       u"ershoufang/pg%drs%s/" % (page,
-                                                  urllib.parse.quote(communityname.encode('utf8')))
+                       u"ershoufang/pg%d%srs%s/" % (page, normal_housing,
+                                                    urllib.parse.quote(communityname.encode('utf8')))
             source_code = misc.get_source_code(url_page)
             soup = BeautifulSoup(source_code, 'lxml')
 
@@ -133,22 +132,18 @@ def get_house_percommunity(city, communityname):
                 houseaddr = name.find("div", {"class": "address"})
                 info = houseaddr.div.get_text().split('|')
                 info_dict.update({u'community': communityname})
-                info_dict.update({u'housetype': info[1].strip()})
-                info_dict.update({u'square': info[2].strip()})
-                info_dict.update({u'direction': info[3].strip()})
-                info_dict.update({u'decoration': info[4].strip()})
-
-                housefloor = name.find("div", {"class": "flood"})
-                floor_all = housefloor.div.get_text().split(
-                    '-')[0].strip().split(' ')
-                info_dict.update({u'floor': floor_all[0].strip()})
-                info_dict.update({u'years': floor_all[-1].strip()})
+                info_dict.update({u'housetype': info[0].strip()})
+                info_dict.update({u'square': info[1].strip()[:-2]})
+                info_dict.update({u'direction': info[2].strip()})
+                info_dict.update({u'decoration': info[3].strip()})
+                info_dict.update({u'floor': info[4].strip()})
+                info_dict.update({u'years': info[5].strip()[:info[5].strip().index("年")]})
 
                 followInfo = name.find("div", {"class": "followInfo"})
                 info_dict.update({u'followInfo': followInfo.get_text()})
 
-                tax = name.find("div", {"class": "tag"})
-                info_dict.update({u'taxtype': tax.get_text().strip()})
+                tag = name.find("div", {"class": "tag"})
+                info_dict.update({u'tagtype': tag.get_text().strip()})
 
                 totalPrice = name.find("div", {"class": "totalPrice"})
                 info_dict.update({u'totalPrice': totalPrice.span.get_text()})
@@ -477,10 +472,10 @@ def get_house_perregion(city, district):
 
                     taxfree = name.find("span", {"class": "taxfree"})
                     if taxfree == None:
-                        info_dict.update({u"taxtype": ""})
+                        info_dict.update({u"tagtype": ""})
                     else:
                         info_dict.update(
-                            {u"taxtype": taxfree.get_text().strip()})
+                            {u"tagtype": taxfree.get_text().strip()})
 
                     totalPrice = name.find("div", {"class": "totalPrice"})
                     info_dict.update(
