@@ -1,3 +1,5 @@
+import logging
+
 import requests
 import random
 from datetime import datetime
@@ -41,7 +43,7 @@ def get_source_code(url):
         #result = requests.get(url)
         source_code = result.content
     except Exception as e:
-        print(e)
+        logging.exception(e)
         return
 
     return source_code
@@ -56,9 +58,9 @@ def get_total_pages(url):
     except AttributeError as e:
         page_info = None
 
-    # if it doesnot get total page, then return default value 50
+    # if it doesnot get total page, then return default value 0
     if page_info == None:
-        return 50
+        return total_pages
     # '{"totalPage":5,"curPage":1}'
     page_info_str = page_info.get('page-data').split(',')[0]
     total_pages = int(page_info_str.split(':')[1])

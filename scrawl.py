@@ -6,9 +6,17 @@ import settings
 def get_communitylist(city):
     res = []
     for community in model.Community.select():
-        if community.city == city:
-            res.append(community.title)
+        if community.city != city:
+            continue
+        if int(community.onsale) <= 0:
+            continue
+        if "地铁" not in community.tagList:
+            continue
+        if community.price == "暂无" or int(community.price) > 70000:
+            continue
+        res.append(community.title)
     return res
+
 
 if __name__ == "__main__":
     regionlist = settings.REGIONLIST  # only pinyin support
@@ -17,6 +25,7 @@ if __name__ == "__main__":
     # core.GetHouseByRegionlist(city, regionlist)
     # core.GetRentByRegionlist(city, regionlist)
     # Init,scrapy celllist and insert database; could run only 1st time
-    core.GetCommunityByRegionlist(city, regionlist)
-    # communitylist = get_communitylist(city)  # Read celllist from database
+    # core.GetCommunityByRegionlist(city, regionlist)
+    communitylist = get_communitylist(city)  # Read celllist from database
     # core.GetSellByCommunitylist(city, communitylist)
+    core.GetHouseByCommunitylist(city, communitylist)

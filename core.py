@@ -32,8 +32,7 @@ def GetSellByCommunitylist(city, communitylist):
         try:
             get_sell_percommunity(city, community)
         except Exception as e:
-            logging.error(e)
-            logging.error(community + "Fail")
+            logging.exception(community + "Fail")
             pass
     endtime = datetime.datetime.now()
     logging.info("Run time: " + str(endtime - starttime))
@@ -95,7 +94,8 @@ def GetRentByRegionlist(city, regionlist=[u'xicheng']):
 
 def get_house_percommunity(city, communityname):
     baseUrl = u"http://%s.lianjia.com/" % (city)
-    url = baseUrl + u"ershoufang/rs" + \
+    normal_housing = "sf1"
+    url = baseUrl + u"ershoufang/"+normal_housing+"rs" + \
           urllib.parse.quote(communityname.encode('utf8')) + "/"
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
